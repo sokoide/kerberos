@@ -1,0 +1,44 @@
+version: "3"
+
+volumes:
+  krb5kdc-data:
+
+services:
+  kdc:
+    container_name: krb5-server
+    image: gcavalcante8808/krb5-server
+    hostname: krb5-server
+    # restart: always
+    ports:
+      - "10088:88"
+      - "10464:464"
+      - "10749:749"
+    environment:
+      KRB5_REALM: REALM.SOKOIDE.COM
+      KRB5_KDC: localhost
+      KRB5_PASS: admin
+    volumes:
+      - /tmp/krb5kdc-data-mac:/var/lib/krb5kdc
+    networks:
+      -  shared
+
+  nginx:
+    container_name: nginx-spnego
+    build: ./nginx-spnego
+    hostname: nginx-spnego
+    ports:
+      - "20080:80"
+      - "20433:433"
+    volumes:
+      - ./nginx-spnego/data:/data
+    networks:
+      -  shared
+
+networks:
+  shared:
+    external:
+      name: shared
+  default:
+    external:
+      name: shared
+
