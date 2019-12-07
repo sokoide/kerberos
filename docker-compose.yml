@@ -27,8 +27,8 @@ services:
     build: ./nginx-spnego
     hostname: nginx-spnego
     ports:
-      - "20080:80"
-      - "20433:433"
+      - "20080:10080"
+      - "20433:10433"
     volumes:
       - ./nginx-spnego/data:/data
     networks:

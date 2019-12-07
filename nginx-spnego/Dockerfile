@@ -1,22 +1,35 @@
-FROM ubuntu:latest
+#FROM ubuntu:latest
+FROM alpine
 
 MAINTAINER "So Koide" <sokoide@gmail.com>
 
 WORKDIR /tmp
 
 # Install prerequisites for Nginx compile
-RUN DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y tzdata krb5-user
+RUN apk add --no-cache tzdata krb5
 ENV TZ=Asia/Tokyo
 
-RUN apt install -y \
-    wget tar libssl-dev gcc g++ make zlib1g-dev libpcre3-dev libgd3 libgd-dev libkrb5-dev git libcap2-bin php-fpm
+# RUN apt install -y \
+RUN apk add --no-cache \
+    wget tar openssl-dev gcc g++ make krb5-dev git
 
 # Download nginx
 RUN wget http://nginx.org/download/nginx-1.17.6.tar.gz -O nginx.tar.gz && \
     mkdir /tmp/nginx && \
     tar -xzvf nginx.tar.gz -C /tmp/nginx --strip-components=1 && \
     git clone https://github.com/stnoonan/spnego-http-auth-nginx-module.git /tmp/nginx/spnego-http-auth-nginx-module
+
+RUN apk add --no-cache \
+    libc-dev \
+    pcre-dev \
+    zlib-dev \
+    linux-headers \
+    curl \
+    gnupg \
+    libxslt-dev \
+    gd-dev \
+    geoip-dev \
+    perl-dev
 
 # Build Nginx
 WORKDIR /tmp/nginx
@@ -44,43 +57,35 @@ RUN ./configure \
     make -j4 && \
     make install
 
-# DATA VOLUMES
-RUN mkdir -p /data/nginx/www/
-RUN mkdir -p /data/nginx/logs/
-RUN mkdir -p /data/nginx/conf/
-RUN mkdir -p /data/etc
-
+# DATA VOLUME
+RUN mkdir -p /data/nginx/www /data/nginx/logs /data/nginx/conf /data/etc
 VOLUME ["/data"]
 
 # Cleanup after Nginx build
-RUN apt remove -y \
+RUN apk del --purge \
         wget \
         gcc \
         g++ \
         make \
+        linux-headers \
         git && \
-    apt autoremove -y && \
     rm -rf /tmp/*
 
-# Configure filesystem to support running Nginx
-RUN useradd -ms /bin/bash nginx && \
-    setcap cap_net_bind_service=ep /usr/sbin/nginx
+RUN addgroup -S nginx && adduser -S nginx -G nginx
 
 # Kerberos
 ADD ./data/etc/krb5.conf /etc/krb5.conf
 ADD ./data/etc/krb5.keytab /etc/krb5.keytab
+ADD ./data/nginx/nginx-start.sh /opt/nginx-start.sh
 
-ADD ./data/nginx/nginx-start.sh /opt/bin/nginx-start.sh
-RUN chmod u=rwx /opt/bin/nginx-start.sh && \
-    chown nginx:nginx /opt/bin/nginx-start.sh /data/nginx /usr/local/nginx/conf/nginx.conf /data/nginx/logs /usr/local/nginx /etc/krb5.*
-
-# For troubleshooting
-RUN apt install -y \
-    inetutils-ping curl
+RUN chmod u=rwx /opt/nginx-start.sh && \
+    chown nginx:nginx -R /opt/nginx-start.sh /data/nginx /usr/local/nginx/conf \
+      /data/nginx/logs /usr/local/nginx /etc /usr/sbin/nginx && \
+    rm /usr/local/nginx/conf/nginx.conf /etc/krb5.conf /etc/krb5.keytab
 
 # PORTS
-EXPOSE 80
-EXPOSE 443
+EXPOSE 10080
+EXPOSE 10443
 
 USER nginx
-ENTRYPOINT ["/opt/bin/nginx-start.sh"]
+ENTRYPOINT ["/opt/nginx-start.sh"]
