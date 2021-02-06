@@ -40,7 +40,7 @@ const (
 `
 )
 
-func httpRequest(url string, cl *client.Client) {
+func httpRequest(url string, spn string, cl *client.Client) {
 	l := log.New(os.Stderr, "GOKRB5 Client: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 	err := cl.Login()
@@ -48,7 +48,7 @@ func httpRequest(url string, cl *client.Client) {
 		l.Printf("Error on AS_REQ: %v\n", err)
 	}
 	r, _ := http.NewRequest("GET", url, nil)
-	err = spnego.SetSPNEGOHeader(cl, r, "HTTP/nginx-spnego")
+	err = spnego.SetSPNEGOHeader(cl, r, spn)
 	if err != nil {
 		l.Printf("Error setting client SPNEGO header: %v", err)
 	}
@@ -59,6 +59,31 @@ func httpRequest(url string, cl *client.Client) {
 	fmt.Fprintf(os.Stdout, "Response Code: %v\n", httpResp.StatusCode)
 	content, _ := ioutil.ReadAll(httpResp.Body)
 	fmt.Fprintf(os.Stdout, "Response Body:\n%s\n", content)
+}
+
+func httpRequest2(url string, spn string, cl *client.Client) {
+	l := log.New(os.Stderr, "GOKRB5 Client: ", log.Ldate|log.Ltime|log.Lshortfile)
+
+	err := cl.Login()
+	if err != nil {
+		l.Printf("Error on AS_REQ: %v\n", err)
+	}
+
+	r, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		l.Fatalf("could create request: %v", err)
+	}
+
+	spnegoCl := spnego.NewClient(cl, nil, spn)
+	resp, err := spnegoCl.Do(r)
+	if err != nil {
+		l.Fatalf("error making request: %v", err)
+	}
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		l.Fatalf("error reading response body: %v", err)
+	}
+	fmt.Println(string(b))
 }
 
 func main() {
@@ -76,5 +101,9 @@ func main() {
 	}
 	c.LibDefaults.NoAddresses = true
 	cl := client.NewClientWithKeytab("sokoide", "REALM.SOKOIDE.COM", kt, c)
-	httpRequest("http://nginx-spnego:20080", cl)
+	// 1. manual SPN set
+	// httpRequest("http://nginx-spnego:20080", "HTTP/nginx-spnego" cl)
+
+	// 2. automatic by spnego module
+	httpRequest2("http://nginx-spnego:20080", "HTTP/nginx-spnego", cl)
 }
