@@ -20,7 +20,7 @@ services:
     volumes:
       - /tmp/krb5kdc-data-mac:/var/lib/krb5kdc
     networks:
-      -  shared
+      - shared
 
   nginx:
     container_name: nginx-spnego
@@ -32,7 +32,7 @@ services:
     volumes:
       - ./nginx-spnego/data:/data
     networks:
-      -  shared
+      - shared
 
 networks:
   shared:

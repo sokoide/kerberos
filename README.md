@@ -21,6 +21,9 @@ cp /etc/krb5.keytab /var/lib/krb5kdc # /var/lib/krb5kdc is mapped to /tmp/krb5kd
 
 # on your docker host
 cp /tmp/krb5kdc-data-mac/krb5.keytab ./nginx-spnego/data/etc
+
+# on your mac
+sudo cp /tmp/krb5kdc-data-mac/krb5.keytab ./nginx-spnego/data/etc
 ```
 
 ## How to run (second time or later)
@@ -29,7 +32,8 @@ cp /tmp/krb5kdc-data-mac/krb5.keytab ./nginx-spnego/data/etc
 docker-compose up --build
 
 sudo vim /etc/hosts
-# add nginx-spnego in the line of 127.0.0.1
+# add nginx-spnego in the line of your mac IP address
+# e.g. 192.168.x.y nginx-spnego
 
 kinit $YOURID # get your credential
 curl --negotiate -u: -v http://nginx-spnego:20080/
