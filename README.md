@@ -13,8 +13,12 @@ docker-compose up --build
 ```bash
 # logon to krb5-server
 docker exec -it krb5-server /bin/sh
-ktadmin -p admin/admin
+kadmin -p admin/admin
+# default password is defined as 'admin'. see docker-compose.yml -> KRB5_PASS
+
+# add your id (e.g. sokoide@REALM.SOKOIDE.COM)
 addprinc $YOURID
+# add service id (e.g. HTTP/nginx-spnego@REALM.SOKOIDE.COM)
 addprinc HTTP/nginx-spnego
 ktadd HTTP/nginx-spnego
 cp /etc/krb5.keytab /var/lib/krb5kdc # /var/lib/krb5kdc is mapped to /tmp/krb5kdc-data-mac on Mac
@@ -30,11 +34,31 @@ sudo cp /tmp/krb5kdc-data-mac/krb5.keytab ./nginx-spnego/data/etc
 
 ```bash
 docker-compose up --build
+```
 
+## How to test
+
+* CLI w/ curl
+
+```bash
 sudo vim /etc/hosts
 # add nginx-spnego in the line of your mac IP address
 # e.g. 192.168.x.y nginx-spnego
 
 kinit $YOURID # get your credential
 curl --negotiate -u: -v http://nginx-spnego:20080/
+
+# confirm curl fails as expected w/o --negotiate and -u:
+```
+
+* w/ Go
+```bash
+cd go
+# generate your keytab.
+# e.g. ktutil -> addent -password -p sokoide -v 1 -f -> wkt sokoide.keytab
+
+# change your KDC server name in main.go
+
+# run SPNEGO
+go run main.go
 ```
