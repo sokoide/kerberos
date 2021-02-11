@@ -30,9 +30,9 @@ const (
 
 [realms]
 	REALM.SOKOIDE.COM = {
-			kdc = timemachine:10088
-			admin_server = timemachine:10749
-			kpasswd_server = timemachine:10464
+			kdc = scottmm.local:10088
+			admin_server = scottmm.local:10749
+			kpasswd_server = scottmm.local:10464
 	}
 [domain_realm]
 	.realm.sokoide.com = REALM.SOKOIDE.COM

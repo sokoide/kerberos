@@ -18,7 +18,7 @@ services:
       KRB5_KDC: localhost
       KRB5_PASS: admin
     volumes:
-      - /tmp/krb5kdc-data-mac:/var/lib/krb5kdc
+      - ./tmp/krb5kdc-data:/var/lib/krb5kdc
     networks:
       - shared
 
