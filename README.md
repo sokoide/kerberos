@@ -1,8 +1,29 @@
 # KDC and SPNEGO enabled Nginx
 
+## Prereqs
+This has been tested in the following environments
+
+* kdc: Ubuntu 20.04 Intel + Docker stable, kerberos client: Ubuntu 20.04 Intel
+* kdc: Ubuntu 20.04 Intel + Docker stable, kerberos client: Macos 11.2 Apple Silicon
+* kdc: Macos 11.2 Apple Silicon + Docker preview, client: Macos 11.2 Apple Silicon
+
+* Ubuntu
+
+```bash
+sudo apt install krb5-user
+```
+
+* Macos
+
+```bash
+brew install krb5
+```
+
+
 ## How to build and run (first time)
 
 ```bash
+docker network create shared
 docker-compose up --build
 ```
 
@@ -21,19 +42,20 @@ addprinc $YOURID
 # add service id (e.g. HTTP/nginx-spnego@REALM.SOKOIDE.COM)
 addprinc HTTP/nginx-spnego
 ktadd HTTP/nginx-spnego
-cp /etc/krb5.keytab /var/lib/krb5kdc # /var/lib/krb5kdc is mapped to /tmp/krb5kdc-data-mac on Mac
+exit
 
-# on your docker host
-cp /tmp/krb5kdc-data-mac/krb5.keytab ./nginx-spnego/data/etc
+# copy docker container's /etc/krb5.keytab to the docker host
+cp /etc/krb5.keytab /var/lib/krb5kdc # /var/lib/krb5kdc is mapped to ./tmp/krb5kdc-data on Mac
+exit
 
-# on your mac
-sudo cp /tmp/krb5kdc-data-mac/krb5.keytab ./nginx-spnego/data/etc
+# on your docker host (mac, linux or wsl)
+sudo cp ./tmp/krb5kdc-data/krb5.keytab ./nginx-spnego/data/etc
 ```
 
 ## How to run (second time or later)
 
 ```bash
-docker-compose up --build
+docker-compose up
 ```
 
 ## How to test
@@ -54,8 +76,19 @@ curl --negotiate -u: -v http://nginx-spnego:20080/
 * w/ Go
 ```bash
 cd go
-# generate your keytab.
-# e.g. ktutil -> addent -password -p sokoide -v 1 -f -> wkt sokoide.keytab
+# generate your keytab. type your id's password you used above (addpring $YOURID) when prompted
+# Mac
+ktutil --keytab=sokoide.keytab add -password -p sokoide -V 1 -e aes256-cts-hmac-sha1-96
+# Mac verify
+ktutil --keytab=sokoide.keytab list --keys
+
+# Linux
+ktutil
+addent -password -p sokoide -v 1 -f
+wkt sokoide.keytab
+# Linux verify
+list -e
+exit
 
 # change your KDC server name in main.go
 
