@@ -22,12 +22,14 @@ brew install krb5
 
 ## How to build and run (first time)
 
+* Both KDC and Nginx containers use alpine:latest base image. If you build it on M1 mac, it'll use alpine arm64 image. Otherwise x86_64.
+
 ```bash
 docker network create shared
 docker-compose up --build
 ```
 
-## How to configure Kerberos
+### How to configure Kerberos
 
 * Configure HTTP/nginx-spnego@REALM.SOKOIDE.COM in KDC
 
