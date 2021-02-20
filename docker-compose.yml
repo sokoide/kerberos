@@ -6,9 +6,8 @@ volumes:
 services:
   kdc:
     container_name: krb5-server
-    image: gcavalcante8808/krb5-server
+    build: ./docker/kdc
     hostname: krb5-server
-    # restart: always
     ports:
       - "10088:88"
       - "10464:464"
@@ -24,13 +23,13 @@ services:
 
   nginx:
     container_name: nginx-spnego
-    build: ./nginx-spnego
+    build: ./docker/nginx-spnego
     hostname: nginx-spnego
     ports:
       - "20080:10080"
       - "20433:10433"
     volumes:
-      - ./nginx-spnego/data:/data
+      - ./docker/nginx-spnego/data:/data
     networks:
       - shared
 

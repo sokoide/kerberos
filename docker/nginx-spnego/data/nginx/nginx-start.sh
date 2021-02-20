@@ -5,5 +5,5 @@ cp /data/etc/krb5.conf /etc/krb5.conf
 cp /data/etc/krb5.keytab /etc/krb5.keytab
 
 echo "starting nginx..."
-echo "log dir: ./nginx-spnego/data/nginx/logs"
-exec /usr/sbin/nginx
+echo "log dir: ./docker/nginx-spnego/data/nginx/logs"
+exec /usr/local/nginx/sbin/nginx

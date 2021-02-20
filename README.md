@@ -5,7 +5,7 @@ This has been tested in the following environments
 
 * kdc: Ubuntu 20.04 Intel + Docker stable, kerberos client: Ubuntu 20.04 Intel
 * kdc: Ubuntu 20.04 Intel + Docker stable, kerberos client: Macos 11.2 Apple Silicon
-* kdc: Macos 11.2 Apple Silicon + Docker preview, client: Macos 11.2 Apple Silicon
+* kdc: Macos 11.2 Apple Silicon + Docker preview 3.1.0(60984), client: Macos 11.2 Apple Silicon
 
 * Ubuntu
 
@@ -49,7 +49,7 @@ cp /etc/krb5.keytab /var/lib/krb5kdc # /var/lib/krb5kdc is mapped to ./tmp/krb5k
 exit
 
 # on your docker host (mac, linux or wsl)
-sudo cp ./tmp/krb5kdc-data/krb5.keytab ./nginx-spnego/data/etc
+sudo cp ./tmp/krb5kdc-data/krb5.keytab ./docker/nginx-spnego/data/etc
 ```
 
 ## How to run (second time or later)
