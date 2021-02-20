@@ -90,7 +90,7 @@ wkt sokoide.keytab
 list -e
 exit
 
-# change your KDC server name from 'timemachine' to your host in main.go
+# change your KDC server name from 'scottmm.local' or 'timemachine' to your host in main.go
 
 # run SPNEGO
 go run main.go
