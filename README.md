@@ -54,6 +54,11 @@ exit
 # on your docker host (mac, linux or wsl)
 sudo cp ./tmp/krb5kdc-data/krb5.keytab ./docker/nginx-spnego/data/etc
 ```
+# reuild nginx with the keytab
+
+```bash
+docker-compose build nginx
+```
 
 ## How to run (second time or later)
 
