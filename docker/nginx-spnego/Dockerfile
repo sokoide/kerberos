@@ -43,7 +43,7 @@ RUN addgroup -S nginx && adduser -S nginx -G nginx
 # ADD ./data/etc/krb5.conf /etc/krb5.conf
 # ADD ./data/etc/krb5.keytab /etc/krb5.keytab
 # ADD ./data/nginx/nginx-start.sh /opt/nginx-start.sh
-COPY ./data/etc/krb5.conf ./data/etc/krb5.keytab /etc
+COPY ./data/etc/krb5.conf ./data/etc/krb5.keytab /etc/
 ADD ./data/nginx/nginx-start.sh /opt/nginx-start.sh
 
 RUN chmod u=rwx /opt/nginx-start.sh && \

@@ -18,6 +18,7 @@ sudo apt install krb5-user
 ```bash
 brew install krb5
 ```
+* Ubuntu/Macos: Create/configure /etc/krb5.conf like docker/nginx-spnego/dagta/etc/krb5.conf. Replace 'localhost' with your Docker host name (KDC)
 
 
 ## How to build and run (first time)
