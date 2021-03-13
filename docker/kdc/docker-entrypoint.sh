@@ -45,7 +45,7 @@ if [ ! -f "/var/lib/krb5kdc/principal" ]; then
     fi
 
     echo "Creating KDC configuration"
-cat <<EOT > /var/lib/krb5kdc/kdc.conf
+	cat <<EOT > /var/lib/krb5kdc/kdc.conf
 [kdcdefaults]
     kdc_listen = 88
     kdc_tcp_listen = 88
@@ -66,15 +66,15 @@ cat <<EOT > /var/lib/krb5kdc/kdc.conf
     default = FILE:/var/log/krb5lib.log
 EOT
 
-echo "Creating default policy - Admin access to */admin"
-echo "*/admin@${KRB5_REALM} *" > /var/lib/krb5kdc/kadm5.acl
-echo "*/service@${KRB5_REALM} aci" >> /var/lib/krb5kdc/kadm5.acl
+	echo "Creating default policy - Admin access to */admin" echo "*/admin@${KRB5_REALM} *" > /var/lib/krb5kdc/kadm5.acl
+	echo "*/service@${KRB5_REALM} aci" >> /var/lib/krb5kdc/kadm5.acl
 
-    echo "Creating temporary password file"
-cat <<EOT > /etc/krb5_pass
-${KRB5_PASS}
-${KRB5_PASS}
+		echo "Creating temporary password file"
+	cat <<EOT > /etc/krb5_pass
+	${KRB5_PASS}
+	${KRB5_PASS}
 EOT
+
     echo "Creating krb5util database"
     kdb5_util create -r ${KRB5_REALM} < /etc/krb5_pass
     rm /etc/krb5_pass

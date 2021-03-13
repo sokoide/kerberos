@@ -13,6 +13,7 @@ ENV TZ=Asia/Tokyo \
 # DATA VOLUME
 RUN mkdir -p /go /data/nginx/www /data/nginx/logs /data/nginx/conf /data/etc
 VOLUME ["/data"]
+VOLUME ["/conf"]
 WORKDIR /tmp/nginx
 ADD modules3rd.ini /tmp/nginx
 
