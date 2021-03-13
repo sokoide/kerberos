@@ -18,7 +18,6 @@ services:
       KRB5_PASS: admin
     volumes:
       - ./tmp/krb5kdc-data:/var/lib/krb5kdc
-      - ./docker/conf:/conf
     networks:
       - shared
 
