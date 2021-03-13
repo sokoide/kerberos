@@ -18,6 +18,7 @@ services:
       KRB5_PASS: admin
     volumes:
       - ./tmp/krb5kdc-data:/var/lib/krb5kdc
+      - ./docker/conf:/conf
     networks:
       - shared
 
@@ -30,6 +31,9 @@ services:
       - "20433:10433"
     volumes:
       - ./docker/nginx-spnego/data:/data
+      - ./tmp/krb5kdc-data:/conf
+    depends_on:
+      - kdc
     networks:
       - shared
 

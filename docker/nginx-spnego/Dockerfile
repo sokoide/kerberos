@@ -13,6 +13,7 @@ ENV TZ=Asia/Tokyo \
 # DATA VOLUME
 RUN mkdir -p /go /data/nginx/www /data/nginx/logs /data/nginx/conf /data/etc
 VOLUME ["/data"]
+VOLUME ["/conf"]
 WORKDIR /tmp/nginx
 ADD modules3rd.ini /tmp/nginx
 
@@ -29,12 +30,13 @@ RUN apk add --no-cache --virtual=.tmp-pkgs \
 RUN addgroup -S nginx && adduser -S nginx -G nginx
 
 # Kerberos
-COPY ./data/etc/krb5.conf ./data/etc/krb5.keytab /etc/
+# COPY ./data/etc/krb5.conf ./data/etc/krb5.keytab /etc/
+COPY ./data/etc/krb5.conf /etc/
 ADD ./data/nginx/nginx-start.sh /opt/nginx-start.sh
 
 RUN chmod u=rwx /opt/nginx-start.sh && \
 	chown nginx:nginx -R /opt/nginx-start.sh /data/nginx /usr/local/nginx/conf && \
-	chown nginx:nginx -R /data/nginx/logs /usr/local/nginx /etc/krb5.conf /etc/krb5.keytab /usr/local/nginx/sbin/nginx
+	chown nginx:nginx -R /data/nginx/logs /usr/local/nginx /etc/krb5.conf /usr/local/nginx/sbin/nginx
 
 # PORTS
 EXPOSE 10080

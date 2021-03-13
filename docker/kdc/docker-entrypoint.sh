@@ -75,7 +75,6 @@ cat <<EOT > /etc/krb5_pass
 ${KRB5_PASS}
 ${KRB5_PASS}
 EOT
-
     echo "Creating krb5util database"
     kdb5_util create -r ${KRB5_REALM} < /etc/krb5_pass
     rm /etc/krb5_pass
@@ -83,6 +82,17 @@ EOT
     echo "Creating admin account"
     kadmin.local -q "addprinc -pw ${KRB5_PASS} admin/admin@${KRB5_REALM}"
 
+    echo "Creating other accounts"
+    kadmin.local -q "addprinc -pw ${KRB5_PASS} sokoide@${KRB5_REALM}"
+    kadmin.local -q "addprinc -pw ${KRB5_PASS} scott@${KRB5_REALM}"
+    kadmin.local -q "addprinc -pw ${KRB5_PASS} sandy@${KRB5_REALM}"
+
+    echo "Creating HTTP SPN"
+    kadmin.local -q "addprinc -randkey HTTP/nginx-spnego@${KRB5_REALM}"
+    kadmin.local -q "ktadd HTTP/nginx-spnego@${KRB5_REALM}"
+
+	echo "Copying keytab"
+	cp /etc/krb5.keytab /var/lib/krb5kdc
 fi
 
 

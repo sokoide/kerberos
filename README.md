@@ -19,20 +19,32 @@ sudo apt install krb5-user
 brew install krb5
 ```
 * Ubuntu/Macos: Create/configure /etc/krb5.conf like docker/nginx-spnego/dagta/etc/krb5.conf. Replace 'localhost' with your Docker host name (KDC)
+* MacOs uses Heimdal Kerberos which needs 'tcp/' in /etc/krb5.conf as below
+
+```bash
+[realms]
+        REALM.SOKOIDE.COM = {
+                kdc = tcp/scottmm.local:10088
+                admin_server = tcp/scottmm.local:10749
+                                kpasswd_server = tcp/scottmm.local:10464
+        }
+```
 
 
-## How to build and run (first time)
+## How to build and run
 
 * Both KDC and Nginx containers use alpine:latest base image. If you build it on M1 mac, it'll use alpine arm64 image. Otherwise x86_64.
 
 ```bash
+rm -rf tmp/krb5kdc-data/*
 docker network create shared
 docker-compose up --build
 ```
 
-### How to configure Kerberos
+### What is configured
 
-* Configure HTTP/nginx-spnego@REALM.SOKOIDE.COM in KDC
+* See docker/kdc/docker-entrypoint.sh for details
+* To add more principals manually, you can do this
 
 ```bash
 # logon to krb5-server
@@ -42,28 +54,13 @@ kadmin -p admin/admin
 
 # add your id (e.g. sokoide@REALM.SOKOIDE.COM)
 addprinc $YOURID
-# add service id (e.g. HTTP/nginx-spnego@REALM.SOKOIDE.COM)
+# if you cant to add service id (e.g. HTTP/nginx-spnego@REALM.SOKOIDE.COM) and export the keytab
 addprinc HTTP/nginx-spnego
 ktadd HTTP/nginx-spnego
 exit
 
-# copy docker container's /etc/krb5.keytab to the docker host
 cp /etc/krb5.keytab /var/lib/krb5kdc # /var/lib/krb5kdc is mapped to ./tmp/krb5kdc-data on Mac
 exit
-
-# on your docker host (mac, linux or wsl)
-sudo cp ./tmp/krb5kdc-data/krb5.keytab ./docker/nginx-spnego/data/etc
-```
-# reuild nginx with the keytab
-
-```bash
-docker-compose build nginx
-```
-
-## How to run (second time or later)
-
-```bash
-docker-compose up
 ```
 
 ## How to test
