@@ -2,3 +2,5 @@ tags
 **/*.pid
 **/*.log
 tmp/
+**/*.keytab
+**/*.ccache

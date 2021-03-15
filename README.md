@@ -43,6 +43,12 @@ docker-compose up --build
 
 ### What is configured
 
+* By default, the following 3 users and 1 HTTP SPN are configured
+* Password for the first 3 are `admin`. The last one is random (-randkey)
+   * admin
+   * scott
+   * sandy
+   * HTTP/nginx-spnego
 * See docker/kdc/docker-entrypoint.sh for details
 * To add more principals manually, you can do this
 
@@ -81,11 +87,15 @@ curl --negotiate -u: -v http://nginx-spnego:20080/
 * w/ Go
 ```bash
 cd go
+
+# change your KDC server name from 'scottmm.local' to your host in main.go
+
+# 1. Keytab
 # generate your keytab. type your id's password you used above (addpring $YOURID) when prompted
 # Mac
-ktutil --keytab=sokoide.keytab add -password -p sokoide -V 1 -e aes256-cts-hmac-sha1-96
+ktutil --keytab=scott.keytab add -password -p scott -V 1 -e aes256-cts-hmac-sha1-96
 # Mac verify
-ktutil --keytab=sokoide.keytab list --keys
+ktutil --keytab=scott.keytab list --keys
 
 # Linux
 ktutil
@@ -93,10 +103,16 @@ addent -password -p sokoide -v 1 -f
 wkt sokoide.keytab
 # Linux verify
 list -e
-exit
-
-# change your KDC server name from 'scottmm.local' or 'timemachine' to your host in main.go
+exit # run SPNEGO go run main.go -kt -ktpath ./scott.keytab
+# 2. Ccache
+kinit -c hoge.ccache scott # default password is 'admin'
 
 # run SPNEGO
-go run main.go
+go run main.go -cc -ccpath ./hoge.ccache
+
 ```
+
+# To geenrate ccache on MacOS
+kinit -c hoge.ccache scott
+
+

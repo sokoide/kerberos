@@ -1,16 +1,17 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 
-	"gopkg.in/jcmturner/gokrb5.v7/client"
-	"gopkg.in/jcmturner/gokrb5.v7/config"
-	"gopkg.in/jcmturner/gokrb5.v7/keytab"
-	"gopkg.in/jcmturner/gokrb5.v7/spnego"
+	"github.com/jcmturner/gokrb5/v8/client"
+	"github.com/jcmturner/gokrb5/v8/config"
+	"github.com/jcmturner/gokrb5/v8/credentials"
+	"github.com/jcmturner/gokrb5/v8/keytab"
+	"github.com/jcmturner/gokrb5/v8/spnego"
 )
 
 const (
@@ -41,69 +42,89 @@ const (
 )
 
 func httpRequest(url string, spn string, cl *client.Client) {
-	l := log.New(os.Stderr, "GOKRB5 Client: ", log.Ldate|log.Ltime|log.Lshortfile)
-
 	err := cl.Login()
-	if err != nil {
-		l.Printf("Error on AS_REQ: %v\n", err)
-	}
-	r, _ := http.NewRequest("GET", url, nil)
-	err = spnego.SetSPNEGOHeader(cl, r, spn)
-	if err != nil {
-		l.Printf("Error setting client SPNEGO header: %v", err)
-	}
-	httpResp, err := http.DefaultClient.Do(r)
-	if err != nil {
-		l.Printf("Request error: %v\n", err)
-	}
-	fmt.Fprintf(os.Stdout, "Response Code: %v\n", httpResp.StatusCode)
-	content, _ := ioutil.ReadAll(httpResp.Body)
-	fmt.Fprintf(os.Stdout, "Response Body:\n%s\n", content)
-}
-
-func httpRequest2(url string, spn string, cl *client.Client) {
-	l := log.New(os.Stderr, "GOKRB5 Client: ", log.Ldate|log.Ltime|log.Lshortfile)
-
-	err := cl.Login()
-	if err != nil {
-		l.Printf("Error on AS_REQ: %v\n", err)
-	}
+	errCheck(err)
 
 	r, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		l.Fatalf("could create request: %v", err)
-	}
+	errCheck(err)
 
 	spnegoCl := spnego.NewClient(cl, nil, spn)
 	resp, err := spnegoCl.Do(r)
-	if err != nil {
-		l.Fatalf("error making request: %v", err)
-	}
+	errCheck(err)
+
 	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		l.Fatalf("error reading response body: %v", err)
-	}
+	errCheck(err)
+
 	fmt.Println(string(b))
 }
 
-func main() {
-	// read keytab
-	kt, err := keytab.Load("sokoide.keytab")
-	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		panic(err)
-	}
-	// read krb5.conf
-	c, err := config.NewConfigFromString(KRB5CONF)
-	if err != nil {
-		fmt.Printf("err: %v\n", err)
-		panic(err)
-	}
-	c.LibDefaults.NoAddresses = true
-	cl := client.NewClientWithKeytab("sokoide", "REALM.SOKOIDE.COM", kt, c)
-	// 1. manual SPN set
-	// httpRequest("http://nginx-spnego:20080", "HTTP/nginx-spnego" cl)
+// to make ccache file on Mac,
+// kinit -c hoge.ccache scott
+type Options struct {
+	UseKeytab  bool
+	KeytabPath string
+	UseCcache  bool
+	CcachePath string
+}
 
-	// 2. automatic by spnego module
-	httpRequest2("http://nginx-spnego:20080", "HTTP/nginx-spnego", cl)
+var options = Options{
+	UseKeytab:  false,
+	KeytabPath: "",
+	UseCcache:  true,
+	CcachePath: "hoge.ccache",
+}
+
+func errCheck(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func initFlags() {
+	flag.BoolVar(&options.UseKeytab, "kt", options.UseKeytab, "Use Keytab")
+	flag.BoolVar(&options.UseCcache, "cc", options.UseCcache, "Use Credential cache. Generate it by kinit -c hoge.ccache scott")
+	flag.StringVar(&options.KeytabPath, "ktpath", options.KeytabPath, "Keytab path")
+	flag.StringVar(&options.CcachePath, "ccpath", options.CcachePath, "Credential cache file path")
+	flag.Parse()
+}
+
+func main() {
+	var err error
+	var kt *keytab.Keytab
+	var ccache *credentials.CCache
+	var c *config.Config
+	var cl *client.Client
+
+	initFlags()
+
+	// Enable below if you want to read /etc/krb5.conf
+	// Note:
+	// MacOS uses Heimdal and krb5.conf format is different (e.g. tcp/$hostname)
+	// To use gokrb, it must be MIT format (only $hostname)
+	// that is the reason why I keep the conf in KRB5CONF string const above
+	//
+	// krb5ConfReader, err := os.Open("/etc/krb5.conf")
+	// errCheck(err)
+	// defer krb5ConfReader.Close()
+	// c, err = config.NewFromReader(krb5ConfReader)
+
+	c, err = config.NewFromString(KRB5CONF)
+	errCheck(err)
+	c.LibDefaults.NoAddresses = true
+
+	if options.UseKeytab {
+		kt, err = keytab.Load(options.KeytabPath)
+		errCheck(err)
+		user := os.Getenv("USER")
+		realm := "REALM.SOKOIDE.COM"
+		cl = client.NewWithKeytab(user, realm, kt, c)
+	} else if options.UseCcache {
+		ccache, err = credentials.LoadCCache(options.CcachePath)
+		errCheck(err)
+		cl, err = client.NewFromCCache(ccache, c)
+	} else {
+		panic("You must use either Keytab or Ccache")
+	}
+
+	httpRequest("http://nginx-spnego:20080", "HTTP/nginx-spnego", cl)
 }
