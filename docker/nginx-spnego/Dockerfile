@@ -22,7 +22,7 @@ RUN apk add --no-cache --virtual=.tmp-pkgs \
     wget tar openssl-dev gcc g++ make krb5-dev git go \
 	libc-dev pcre-dev zlib-dev linux-headers \
 	curl gnupg libxslt-dev gd-dev geoip-dev perl-dev && \
-    go get -u github.com/cubicdaiya/nginx-build;cd /tmp/nginx; $GOPATH/bin/nginx-build -d work -v 1.19.7 -pcre -zlib -openssl -m modules3rd.ini -clear && \
+    go get -u github.com/cubicdaiya/nginx-build;cd /tmp/nginx; $GOPATH/bin/nginx-build -d work -v 1.19.7 -zlib -openssl -m modules3rd.ini -clear && \
     cd /tmp/nginx/work/nginx/*/nginx-*;make install;cd - && \
     apk del --purge .tmp-pkgs && \
     rm -rf /tmp/*
