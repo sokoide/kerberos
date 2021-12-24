@@ -16,14 +16,15 @@ VOLUME ["/data"]
 VOLUME ["/conf"]
 WORKDIR /tmp/nginx
 ADD modules3rd.ini /tmp/nginx
+ADD pcre-8.32.tar.bz2 /tmp/nginx
 
 # RUN apt install -y \
 RUN apk add --no-cache --virtual=.tmp-pkgs \
     wget tar openssl-dev gcc g++ make krb5-dev git go \
-	libc-dev pcre-dev zlib-dev linux-headers \
+	libc-dev pcre pcre-dev zlib-dev linux-headers \
 	curl gnupg libxslt-dev gd-dev geoip-dev perl-dev && \
-    go get -u github.com/cubicdaiya/nginx-build;cd /tmp/nginx; $GOPATH/bin/nginx-build -d work -v 1.19.7 -zlib -openssl -m modules3rd.ini -clear && \
-    cd /tmp/nginx/work/nginx/*/nginx-*;make install;cd - && \
+	go get -u github.com/cubicdaiya/nginx-build && $GOPATH/bin/nginx-build -d work -v 1.21.4 -with-pcre=/tmp/nginx/pcre-8.32 -zlib -openssl -m modules3rd.ini -clear && \
+    cd /tmp/nginx/work/nginx/*/nginx-* && make install && cd - && \
     apk del --purge .tmp-pkgs && \
     rm -rf /tmp/*
 
